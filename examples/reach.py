@@ -1,16 +1,14 @@
-import gymnasium as gym
-
+import gym
 import panda_gym
 
-env = gym.make("PandaReach-v3", render_mode="human")
+env = gym.make("PandaReach-v2", render=True)
 
-observation, info = env.reset()
+obs = env.reset()
+done = False
 
-for _ in range(1000):
+while not done:
     action = env.action_space.sample()
-    observation, reward, terminated, truncated, info = env.step(action)
-
-    if terminated or truncated:
-        observation, info = env.reset()
+    obs, reward, done, info = env.step(action)
+    env.render()
 
 env.close()

@@ -1,23 +1,19 @@
-import gymnasium as gym
-from numpngw import write_apng  # pip install numpngw
-
+import gym
 import panda_gym
+from numpngw import write_apng  # pip install numpngw or pip install panda-gym[extra]
 
-env = gym.make("PandaStack-v3", render_mode="rgb_array")
+env = gym.make("PandaStack-v2", render=True)
 images = []
 
 
-observation, info = env.reset()
-images.append(env.render())
+obs = env.reset()
+done = False
+images.append(env.render("rgb_array"))
 
-for _ in range(1000):
+while not done:
     action = env.action_space.sample()
-    observation, reward, terminated, truncated, info = env.step(action)
-    images.append(env.render())
-
-    if terminated or truncated:
-        observation, info = env.reset()
-        images.append(env.render())
+    obs, reward, done, info = env.step(action)
+    images.append(env.render("rgb_array"))
 
 env.close()
 

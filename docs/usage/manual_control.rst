@@ -7,20 +7,19 @@ It is possible to manually control the robot, giving it deterministic actions, d
 
 .. code-block:: python
 
-    import gymnasium as gym
+    import gym
     import panda_gym
 
-    env = gym.make("PandaReach-v3", render_mode="human")
-    observation, info = env.reset()
+    env = gym.make("PandaReach-v2", render=True)
+    obs = env.reset()
+    done = False
 
-    for _ in range(1000):
-        current_position = observation["observation"][0:3]
-        desired_position = observation["desired_goal"][0:3]
+    while not done:
+        current_position = obs["observation"][0:3]
+        desired_position = obs["desired_goal"][0:3]
         action = 5.0 * (desired_position - current_position)
-        observation, reward, terminated, truncated, info = env.step(action)
-
-        if terminated or truncated:
-            observation, info = env.reset()
+        obs, reward, done, info = env.step(action)
+        env.render()
 
     env.close()
 

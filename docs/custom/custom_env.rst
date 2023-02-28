@@ -17,8 +17,8 @@ Then, you have to inherit from the :py:class:`RobotTaskEnv<panda_gym.envs.core.R
     class MyRobotTaskEnv(RobotTaskEnv):
         """My robot-task environment."""
 
-        def __init__(self, render_mode):
-            sim = PyBullet(render_mode=render_mode)
+        def __init__(self, render=False):
+            sim = PyBullet(render=render)
             robot = MyRobot(sim)
             task = MyTask(sim)
             super().__init__(robot, task)
@@ -32,14 +32,12 @@ You can now test your environment by running the following code.
 
 .. code-block:: python
 
-    env = MyRobotTaskEnv(render_mode="human")
+    env = MyRobotTaskEnv(render=True)
 
-    observation, info = env.reset()
-
-    for _ in range(1000):
+    obs = env.reset()
+    done = False
+    while not done:
         action = env.action_space.sample() # random action
-        observation, reward, terminated, truncated, info = env.step(action)
-
-        if terminated or truncated:
-            observation, info = env.reset()
+        obs, reward, done, info = env.step(action)
+        env.render() # wait a bit to give a realistic temporal rendering
 

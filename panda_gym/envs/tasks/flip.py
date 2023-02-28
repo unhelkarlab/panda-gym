@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Union
 
 import numpy as np
 from scipy.spatial.transform import Rotation as R
@@ -79,13 +79,13 @@ class Flip(Task):
         object_rotation = np.zeros(3)
         return object_position, object_rotation
 
-    def is_success(self, achieved_goal: np.ndarray, desired_goal: np.ndarray) -> np.ndarray:
+    def is_success(self, achieved_goal: np.ndarray, desired_goal: np.ndarray) -> Union[np.ndarray, float]:
         d = angle_distance(achieved_goal, desired_goal)
-        return np.array(d < self.distance_threshold, dtype=bool)
+        return np.array(d < self.distance_threshold, dtype=np.float64)
 
-    def compute_reward(self, achieved_goal, desired_goal, info: Dict[str, Any]) -> np.ndarray:
+    def compute_reward(self, achieved_goal, desired_goal, info: Dict[str, Any]) -> Union[np.ndarray, float]:
         d = angle_distance(achieved_goal, desired_goal)
         if self.reward_type == "sparse":
-            return -np.array(d > self.distance_threshold, dtype=np.float32)
+            return -np.array(d > self.distance_threshold, dtype=np.float64)
         else:
-            return -d.astype(np.float32)
+            return -d
