@@ -22,8 +22,9 @@ class PyBullet:
             Defaults to np.array([223, 54, 45]).
     """
 
-    def __init__(self, render: bool = False, n_substeps: int = 20, background_color: Optional[np.ndarray] = None) -> None:
-        background_color = background_color if background_color is not None else np.array([223.0, 54.0, 45.0])
+    def __init__(
+        self, render: bool = False, n_substeps: int = 20, background_color: np.ndarray = np.array([223.0, 54.0, 45.0])
+    ) -> None:
         self.background_color = background_color.astype(np.float64) / 255
         options = "--background_color_red={} \
                     --background_color_green={} \
@@ -62,7 +63,7 @@ class PyBullet:
         mode: str = "human",
         width: int = 720,
         height: int = 480,
-        target_position: Optional[np.ndarray] = None,
+        target_position: np.ndarray = np.zeros(3),
         distance: float = 1.4,
         yaw: float = 45,
         pitch: float = -30,
@@ -88,7 +89,6 @@ class PyBullet:
         Returns:
             RGB np.ndarray or None: An RGB array if mode is 'rgb_array', else None.
         """
-        target_position = target_position if target_position is not None else np.zeros(3)
         if mode == "human":
             self.physics_client.configureDebugVisualizer(self.physics_client.COV_ENABLE_SINGLE_STEP_RENDERING)
             time.sleep(self.dt)  # wait to seems like real speed
@@ -374,8 +374,8 @@ class PyBullet:
         half_extents: np.ndarray,
         mass: float,
         position: np.ndarray,
-        rgba_color: Optional[np.ndarray] = None,
-        specular_color: Optional[np.ndarray] = None,
+        rgba_color: Optional[np.ndarray] = np.ones(4),
+        specular_color: np.ndarray = np.zeros(3),
         ghost: bool = False,
         lateral_friction: Optional[float] = None,
         spinning_friction: Optional[float] = None,
@@ -397,8 +397,6 @@ class PyBullet:
                 value. Defaults to None.
             texture (str or None, optional): Texture file name. Defaults to None.
         """
-        rgba_color = rgba_color if rgba_color is not None else np.zeros(4)
-        specular_color = specular_color if specular_color is not None else np.zeros(3)
         visual_kwargs = {
             "halfExtents": half_extents,
             "specularColor": specular_color,
@@ -428,8 +426,8 @@ class PyBullet:
         height: float,
         mass: float,
         position: np.ndarray,
-        rgba_color: Optional[np.ndarray] = None,
-        specular_color: Optional[np.ndarray] = None,
+        rgba_color: Optional[np.ndarray] = np.zeros(4),
+        specular_color: np.ndarray = np.zeros(3),
         ghost: bool = False,
         lateral_friction: Optional[float] = None,
         spinning_friction: Optional[float] = None,
@@ -450,8 +448,6 @@ class PyBullet:
             spinning_friction (float or None, optional): Spinning friction. If None, use the default pybullet
                 value. Defaults to None.
         """
-        rgba_color = rgba_color if rgba_color is not None else np.zeros(4)
-        specular_color = specular_color if specular_color is not None else np.zeros(3)
         visual_kwargs = {
             "radius": radius,
             "length": height,
@@ -477,8 +473,8 @@ class PyBullet:
         radius: float,
         mass: float,
         position: np.ndarray,
-        rgba_color: Optional[np.ndarray] = None,
-        specular_color: Optional[np.ndarray] = None,
+        rgba_color: Optional[np.ndarray] = np.zeros(4),
+        specular_color: np.ndarray = np.zeros(3),
         ghost: bool = False,
         lateral_friction: Optional[float] = None,
         spinning_friction: Optional[float] = None,
@@ -498,8 +494,6 @@ class PyBullet:
             spinning_friction (float or None, optional): Spinning friction. If None, use the default pybullet
                 value. Defaults to None.
         """
-        rgba_color = rgba_color if rgba_color is not None else np.zeros(4)
-        specular_color = specular_color if specular_color is not None else np.zeros(3)
         visual_kwargs = {
             "radius": radius,
             "specularColor": specular_color,
@@ -523,7 +517,7 @@ class PyBullet:
         body_name: str,
         geom_type: int,
         mass: float = 0.0,
-        position: Optional[np.ndarray] = None,
+        position: np.ndarray = np.zeros(3),
         ghost: bool = False,
         lateral_friction: Optional[float] = None,
         spinning_friction: Optional[float] = None,
@@ -545,7 +539,6 @@ class PyBullet:
             visual_kwargs (dict, optional): Visual kwargs. Defaults to {}.
             collision_kwargs (dict, optional): Collision kwargs. Defaults to {}.
         """
-        position = position if position is not None else np.zeros(3)
         baseVisualShapeIndex = self.physics_client.createVisualShape(geom_type, **visual_kwargs)
         if not ghost:
             baseCollisionShapeIndex = self.physics_client.createCollisionShape(geom_type, **collision_kwargs)
