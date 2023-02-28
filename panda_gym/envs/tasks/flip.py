@@ -3,15 +3,14 @@ from typing import Any, Dict, Tuple, Union
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from panda_gym.envs.core import Task
-from panda_gym.pybullet import PyBullet
+from panda_gym.envs.core import Task, Sim
 from panda_gym.utils import angle_distance
 
 
 class Flip(Task):
     def __init__(
         self,
-        sim: PyBullet,
+        sim: Sim,
         reward_type: str = "sparse",
         distance_threshold: float = 0.2,
         obj_xy_range: float = 0.3,

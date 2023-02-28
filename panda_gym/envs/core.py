@@ -1,19 +1,464 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Tuple, Union
+from contextlib import contextmanager
+from typing import Any, Dict, Iterator, Optional, Tuple, Union
 
 import gym
 import gym.spaces
 import gym.utils.seeding
 import numpy as np
 
-from panda_gym.pybullet import PyBullet
+class Sim(ABC):
+    """Base class for robot sim.
+
+    Args:
+        render (bool, optional): Enable rendering. Defaults to False.
+        n_substeps (int, optional): Number of sim substep when step() is called. Defaults to 20.
+        background_color (np.ndarray, optional): The background color as (red, green, blue).
+            Defaults to np.array([223, 54, 45]).
+    """
+    
+    # TODO: does this need an init? I don't think so
+
+    @abstractmethod
+    def dt(self):
+        """Timestep."""
+        pass
+
+    @abstractmethod
+    def step(self) -> None:
+        """Step the simulation."""
+        pass
+
+    @abstractmethod
+    def close(self) -> None:
+        """Close the simulation."""
+        pass
+
+    @abstractmethod
+    def render(
+        self,
+        mode: str = "human",
+        width: int = 720,
+        height: int = 480,
+        target_position: np.ndarray = np.zeros(3),
+        distance: float = 1.4,
+        yaw: float = 45,
+        pitch: float = -30,
+        roll: float = 0,
+    ) -> Optional[np.ndarray]:
+        pass
+
+    @abstractmethod
+    def get_base_position(self, body: str) -> np.ndarray:
+        """Get the position of the body.
+
+        Args:
+            body (str): Body unique name.
+
+        Returns:
+            np.ndarray: The position, as (x, y, z).
+        """
+        pass
+
+    @abstractmethod
+    def get_base_orientation(self, body: str) -> np.ndarray:
+        """Get the orientation of the body.
+
+        Args:
+            body (str): Body unique name.
+
+        Returns:
+            np.ndarray: The orientation, as quaternion (x, y, z, w).
+        """
+        pass
+
+    @abstractmethod
+    def get_base_rotation(self, body: str, type: str = "euler") -> np.ndarray:
+        """Get the rotation of the body.
+
+        Args:
+            body (str): Body unique name.
+            type (str): Type of angle, either "euler" or "quaternion"
+
+        Returns:
+            np.ndarray: The rotation.
+        """
+        pass
+
+    @abstractmethod
+    def get_base_velocity(self, body: str) -> np.ndarray:
+        """Get the velocity of the body.
+
+        Args:
+            body (str): Body unique name.
+
+        Returns:
+            np.ndarray: The velocity, as (vx, vy, vz).
+        """
+        pass
+
+    @abstractmethod
+    def get_base_angular_velocity(self, body: str) -> np.ndarray:
+        """Get the angular velocity of the body.
+
+        Args:
+            body (str): Body unique name.
+
+        Returns:
+            np.ndarray: The angular velocity, as (wx, wy, wz).
+        """
+        pass
+
+    @abstractmethod
+    def get_link_position(self, body: str, link: int) -> np.ndarray:
+        """Get the position of the link of the body.
+
+        Args:
+            body (str): Body unique name.
+            link (int): Link index in the body.
+
+        Returns:
+            np.ndarray: The position, as (x, y, z).
+        """
+        pass
+
+    @abstractmethod
+    def get_link_orientation(self, body: str, link: int) -> np.ndarray:
+        """Get the orientation of the link of the body.
+
+        Args:
+            body (str): Body unique name.
+            link (int): Link index in the body.
+
+        Returns:
+            np.ndarray: The rotation, as (rx, ry, rz).
+        """
+        pass
+
+    @abstractmethod
+    def get_link_velocity(self, body: str, link: int) -> np.ndarray:
+        """Get the velocity of the link of the body.
+
+        Args:
+            body (str): Body unique name.
+            link (int): Link index in the body.
+
+        Returns:
+            np.ndarray: The velocity, as (vx, vy, vz).
+        """
+        pass
+
+    @abstractmethod
+    def get_link_angular_velocity(self, body: str, link: int) -> np.ndarray:
+        """Get the angular velocity of the link of the body.
+
+        Args:
+            body (str): Body unique name.
+            link (int): Link index in the body.
+
+        Returns:
+            np.ndarray: The angular velocity, as (wx, wy, wz).
+        """
+        pass
+
+    @abstractmethod
+    def get_joint_angle(self, body: str, joint: int) -> float:
+        """Get the angle of the joint of the body.
+
+        Args:
+            body (str): Body unique name.
+            joint (int): Joint index in the body
+
+        Returns:
+            float: The angle.
+        """
+        pass
+
+    @abstractmethod
+    def get_joint_velocity(self, body: str, joint: int) -> float:
+        """Get the velocity of the joint of the body.
+
+        Args:
+            body (str): Body unique name.
+            joint (int): Joint index in the body
+
+        Returns:
+            float: The velocity.
+        """
+        pass
+
+    @abstractmethod
+    def set_base_pose(self, body: str, position: np.ndarray, orientation: np.ndarray) -> None:
+        """Set the position of the body.
+
+        Args:
+            body (str): Body unique name.
+            position (np.ndarray): The position, as (x, y, z).
+            orientation (np.ndarray): The target orientation as quaternion (x, y, z, w).
+        """
+        pass
+
+    @abstractmethod
+    def set_joint_angles(self, body: str, joints: np.ndarray, angles: np.ndarray) -> None:
+        """Set the angles of the joints of the body.
+
+        Args:
+            body (str): Body unique name.
+            joints (np.ndarray): List of joint indices, as a list of ints.
+            angles (np.ndarray): List of target angles, as a list of floats.
+        """
+        pass
+
+    @abstractmethod
+    def set_joint_angle(self, body: str, joint: int, angle: float) -> None:
+        """Set the angle of the joint of the body.
+
+        Args:
+            body (str): Body unique name.
+            joint (int): Joint index in the body.
+            angle (float): Target angle.
+        """
+        pass
+
+    @abstractmethod
+    def control_joints(self, body: str, joints: np.ndarray, target_angles: np.ndarray, forces: np.ndarray) -> None:
+        """Control the joints motor.
+
+        Args:
+            body (str): Body unique name.
+            joints (np.ndarray): List of joint indices, as a list of ints.
+            target_angles (np.ndarray): List of target angles, as a list of floats.
+            forces (np.ndarray): Forces to apply, as a list of floats.
+        """
+        pass
+
+    @abstractmethod
+    def inverse_kinematics(self, body: str, link: int, position: np.ndarray, orientation: np.ndarray) -> np.ndarray:
+        """Compute the inverse kinematics and return the new joint state.
+
+        Args:
+            body (str): Body unique name.
+            link (int): Link index in the body.
+            position (np.ndarray): Desired position of the end-effector, as (x, y, z).
+            orientation (np.ndarray): Desired orientation of the end-effector as quaternion (x, y, z, w).
+
+        Returns:
+            np.ndarray: The new joint state.
+        """
+        pass
+
+    @abstractmethod
+    def place_visualizer(self, target_position: np.ndarray, distance: float, yaw: float, pitch: float) -> None:
+        """Orient the camera used for rendering.
+
+        Args:
+            target (np.ndarray): Target position, as (x, y, z).
+            distance (float): Distance from the target position.
+            yaw (float): Yaw.
+            pitch (float): Pitch.
+        """
+        pass
+
+    @abstractmethod
+    @contextmanager
+    def no_rendering(self) -> Iterator[None]:
+        """Disable rendering within this context."""
+        pass
+
+    @abstractmethod
+    def loadURDF(self, body_name: str, **kwargs: Any) -> None:
+        """Load URDF file.
+
+        Args:
+            body_name (str): The name of the body. Must be unique in the sim.
+        """
+        pass
+
+    @abstractmethod
+    def create_box(
+        self,
+        body_name: str,
+        half_extents: np.ndarray,
+        mass: float,
+        position: np.ndarray,
+        rgba_color: Optional[np.ndarray] = np.ones(4),
+        specular_color: np.ndarray = np.zeros(3),
+        ghost: bool = False,
+        lateral_friction: Optional[float] = None,
+        spinning_friction: Optional[float] = None,
+        texture: Optional[str] = None,
+    ) -> None:
+        """Create a box.
+
+        Args:
+            body_name (str): The name of the body. Must be unique in the sim.
+            half_extents (np.ndarray): Half size of the box in meters, as (x, y, z).
+            mass (float): The mass in kg.
+            position (np.ndarray): The position, as (x, y, z).
+            rgba_color (np.ndarray, optional): Body color, as (r, g, b, a). Defaults as [0, 0, 0, 0]
+            specular_color (np.ndarray, optional): Specular color, as (r, g, b). Defaults to [0, 0, 0].
+            ghost (bool, optional): Whether the body can collide. Defaults to False.
+            lateral_friction (float or None, optional): Lateral friction. If None, use the default pybullet
+                value. Defaults to None.
+            spinning_friction (float or None, optional): Spinning friction. If None, use the default pybullet
+                value. Defaults to None.
+            texture (str or None, optional): Texture file name. Defaults to None.
+        """
+        pass
+
+    @abstractmethod
+    def create_cylinder(
+        self,
+        body_name: str,
+        radius: float,
+        height: float,
+        mass: float,
+        position: np.ndarray,
+        rgba_color: Optional[np.ndarray] = np.zeros(4),
+        specular_color: np.ndarray = np.zeros(3),
+        ghost: bool = False,
+        lateral_friction: Optional[float] = None,
+        spinning_friction: Optional[float] = None,
+    ) -> None:
+        """Create a cylinder.
+
+        Args:
+            body_name (str): The name of the body. Must be unique in the sim.
+            radius (float): The radius in meter.
+            height (float): The height in meter.
+            mass (float): The mass in kg.
+            position (np.ndarray): The position, as (x, y, z).
+            rgba_color (np.ndarray, optional): Body color, as (r, g, b, a). Defaults as [0, 0, 0, 0]
+            specular_color (np.ndarray, optional): Specular color, as (r, g, b). Defaults to [0, 0, 0].
+            ghost (bool, optional): Whether the body can collide. Defaults to False.
+            lateral_friction (float or None, optional): Lateral friction. If None, use the default pybullet
+                value. Defaults to None.
+            spinning_friction (float or None, optional): Spinning friction. If None, use the default pybullet
+                value. Defaults to None.
+        """
+        pass
+
+    @abstractmethod
+    def create_sphere(
+        self,
+        body_name: str,
+        radius: float,
+        mass: float,
+        position: np.ndarray,
+        rgba_color: Optional[np.ndarray] = np.zeros(4),
+        specular_color: np.ndarray = np.zeros(3),
+        ghost: bool = False,
+        lateral_friction: Optional[float] = None,
+        spinning_friction: Optional[float] = None,
+    ) -> None:
+        """Create a sphere.
+
+        Args:
+            body_name (str): The name of the body. Must be unique in the sim.
+            radius (float): The radius in meter.
+            mass (float): The mass in kg.
+            position (np.ndarray): The position, as (x, y, z).
+            rgba_color (np.ndarray, optional): Body color, as (r, g, b, a). Defaults as [0, 0, 0, 0]
+            specular_color (np.ndarray, optional): Specular color, as (r, g, b). Defaults to [0, 0, 0].
+            ghost (bool, optional): Whether the body can collide. Defaults to False.
+            lateral_friction (float or None, optional): Lateral friction. If None, use the default pybullet
+                value. Defaults to None.
+            spinning_friction (float or None, optional): Spinning friction. If None, use the default pybullet
+                value. Defaults to None.
+        """
+        pass
+
+    @abstractmethod
+    def _create_geometry(
+        self,
+        body_name: str,
+        geom_type: int,
+        mass: float = 0.0,
+        position: np.ndarray = np.zeros(3),
+        ghost: bool = False,
+        lateral_friction: Optional[float] = None,
+        spinning_friction: Optional[float] = None,
+        visual_kwargs: Dict[str, Any] = {},
+        collision_kwargs: Dict[str, Any] = {},
+    ) -> None:
+        """Create a geometry.
+
+        Args:
+            body_name (str): The name of the body. Must be unique in the sim.
+            geom_type (int): The geometry type. See self.physics_client.GEOM_<shape>.
+            mass (float, optional): The mass in kg. Defaults to 0.
+            position (np.ndarray, optional): The position, as (x, y, z). Defaults to [0, 0, 0].
+            ghost (bool, optional): Whether the body can collide. Defaults to False.
+            lateral_friction (float or None, optional): Lateral friction. If None, use the default pybullet
+                value. Defaults to None.
+            spinning_friction (float or None, optional): Spinning friction. If None, use the default pybullet
+                value. Defaults to None.
+            visual_kwargs (dict, optional): Visual kwargs. Defaults to {}.
+            collision_kwargs (dict, optional): Collision kwargs. Defaults to {}.
+        """
+        pass
+
+    @abstractmethod
+    def create_plane(self, z_offset: float) -> None:
+        """Create a plane. (Actually, it is a thin box.)
+
+        Args:
+            z_offset (float): Offset of the plane.
+        """
+        pass
+
+    @abstractmethod
+    def create_table(
+        self,
+        length: float,
+        width: float,
+        height: float,
+        x_offset: float = 0.0,
+        lateral_friction: Optional[float] = None,
+        spinning_friction: Optional[float] = None,
+    ) -> None:
+        """Create a fixed table. Top is z=0, centered in y.
+
+        Args:
+            length (float): The length of the table (x direction).
+            width (float): The width of the table (y direction)
+            height (float): The height of the table.
+            x_offset (float, optional): The offet in the x direction.
+            lateral_friction (float or None, optional): Lateral friction. If None, use the default pybullet
+                value. Defaults to None.
+            spinning_friction (float or None, optional): Spinning friction. If None, use the default pybullet
+                value. Defaults to None.
+        """
+        pass
+
+    @abstractmethod
+    def set_lateral_friction(self, body: str, link: int, lateral_friction: float) -> None:
+        """Set the lateral friction of a link.
+
+        Args:
+            body (str): Body unique name.
+            link (int): Link index in the body.
+            lateral_friction (float): Lateral friction.
+        """
+        pass
+
+    @abstractmethod
+    def set_spinning_friction(self, body: str, link: int, spinning_friction: float) -> None:
+        """Set the spinning friction of a link.
+
+        Args:
+            body (str): Body unique name.
+            link (int): Link index in the body.
+            spinning_friction (float): Spinning friction.
+        """
+        pass
 
 
 class PyBulletRobot(ABC):
     """Base class for robot env.
 
     Args:
-        sim (PyBullet): Simulation instance.
+        sim (Sim): Simulation instance.
         body_name (str): The name of the robot within the simulation.
         file_name (str): Path of the urdf file.
         base_position (np.ndarray): Position of the base of the robot as (x, y, z).
@@ -21,7 +466,7 @@ class PyBulletRobot(ABC):
 
     def __init__(
         self,
-        sim: PyBullet,
+        sim: Sim,
         body_name: str,
         file_name: str,
         base_position: np.ndarray,
@@ -163,10 +608,10 @@ class PyBulletRobot(ABC):
 class Task(ABC):
     """Base class for tasks.
     Args:
-        sim (PyBullet): Simulation instance.
+        sim (Sim): Simulation instance.
     """
 
-    def __init__(self, sim: PyBullet) -> None:
+    def __init__(self, sim: Sim) -> None:
         self.sim = sim
         self.goal = None
 

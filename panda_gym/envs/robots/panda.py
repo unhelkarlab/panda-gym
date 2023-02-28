@@ -1,15 +1,14 @@
 import numpy as np
 from gym import spaces
 
-from panda_gym.envs.core import PyBulletRobot
-from panda_gym.pybullet import PyBullet
+from panda_gym.envs.core import PyBulletRobot, Sim
 
 
 class Panda(PyBulletRobot):
     """Panda robot in PyBullet.
 
     Args:
-        sim (PyBullet): Simulation instance.
+        sim (Sim): Simulation instance.
         block_gripper (bool, optional): Whether the gripper is blocked. Defaults to False.
         base_position (np.ndarray, optionnal): Position of the base base of the robot, as (x, y, z). Defaults to (0, 0, 0).
         control_type (str, optional): "ee" to control end-effector displacement or "joints" to control joint angles.
@@ -18,7 +17,7 @@ class Panda(PyBulletRobot):
 
     def __init__(
         self,
-        sim: PyBullet,
+        sim: Sim,
         block_gripper: bool = False,
         base_position: np.ndarray = np.array([0.0, 0.0, 0.0]),
         control_type: str = "ee",

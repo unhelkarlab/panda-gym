@@ -2,15 +2,14 @@ from typing import Any, Dict, Union
 
 import numpy as np
 
-from panda_gym.envs.core import Task
-from panda_gym.pybullet import PyBullet
+from panda_gym.envs.core import Task, Sim
 from panda_gym.utils import distance
 
 
 class PickAndPlace(Task):
     def __init__(
         self,
-        sim: PyBullet,
+        sim: Sim,
         reward_type: str = "sparse",
         distance_threshold: float = 0.05,
         goal_xy_range: float = 0.3,

@@ -3,7 +3,7 @@ import numpy as np
 from panda_gym.envs.core import RobotTaskEnv
 from panda_gym.envs.robots.panda import Panda
 from panda_gym.envs.tasks.stack import Stack
-from panda_gym.pybullet import PyBullet
+from panda_gym.envs.sims.pybullet import PyBullet
 
 
 class PandaStackEnv(RobotTaskEnv):

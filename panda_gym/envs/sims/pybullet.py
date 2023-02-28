@@ -10,9 +10,10 @@ import pybullet_data
 import pybullet_utils.bullet_client as bc
 
 import panda_gym.assets
+from panda_gym.envs.core import Sim
 
 
-class PyBullet:
+class PyBullet(Sim):
     """Convenient class to use PyBullet physics engine.
 
     Args:
