@@ -16,7 +16,7 @@ Check out the [documentation](https://panda-gym.readthedocs.io/en/latest/).
 
 ## Installation
 
-### Using PyPI
+### Using PyPI (INVALID SINCE THIS IS A FORK)
 
 ```bash
 pip install panda-gym
