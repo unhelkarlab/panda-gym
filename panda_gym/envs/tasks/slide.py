@@ -2,19 +2,19 @@ from typing import Any, Dict, Union
 
 import numpy as np
 
-from panda_gym.envs.core import Task
+from panda_gym.envs.core import Task, Sim
 from panda_gym.utils import distance
 
 
 class Slide(Task):
     def __init__(
         self,
-        sim,
-        reward_type="sparse",
-        distance_threshold=0.05,
-        goal_xy_range=0.3,
-        goal_x_offset=0.4,
-        obj_xy_range=0.3,
+        sim: Sim,
+        reward_type: str = "sparse",
+        distance_threshold: float = 0.05,
+        goal_xy_range: float = 0.3,
+        goal_x_offset: float = 0.4,
+        obj_xy_range: float = 0.3,
     ) -> None:
         super().__init__(sim)
         self.reward_type = reward_type

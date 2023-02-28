@@ -2,18 +2,18 @@ from typing import Any, Dict, Union
 
 import numpy as np
 
-from panda_gym.envs.core import Task
+from panda_gym.envs.core import Task, Sim
 from panda_gym.utils import distance
 
 
 class Reach(Task):
     def __init__(
         self,
-        sim,
-        get_ee_position,
-        reward_type="sparse",
-        distance_threshold=0.05,
-        goal_range=0.3,
+        sim: Sim,
+        get_ee_position: function,
+        reward_type: str = "sparse",
+        distance_threshold: float = 0.05,
+        goal_range: float = 0.3,
     ) -> None:
         super().__init__(sim)
         self.reward_type = reward_type
