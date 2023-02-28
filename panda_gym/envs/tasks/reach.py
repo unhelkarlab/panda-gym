@@ -1,4 +1,4 @@
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, Callable
 
 import numpy as np
 
@@ -10,7 +10,7 @@ class Reach(Task):
     def __init__(
         self,
         sim: Sim,
-        get_ee_position: function,
+        get_ee_position: Callable,
         reward_type: str = "sparse",
         distance_threshold: float = 0.05,
         goal_range: float = 0.3,
