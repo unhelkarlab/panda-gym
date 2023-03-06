@@ -6,11 +6,14 @@ import numpy as np
 
 from panda_ros.moveit.move_group_interface import MoveGroupInterface
 from panda_ros.utils import logger
+from panda_ros.utils import geometry_tools
+
+from geometry_msgs.msg import Quaternion
 
 class Ros(Sim):
     """Class to send robot commands to ROS.
 
-    Note: Must be initialized inside of a ROS node.
+    Note: Must be initialized inside of a ROS node. geometry_tools must be initialized
     Note: Not used means that this is not used by panda.py, core.py, or reach.py
 
     Args:
@@ -127,8 +130,13 @@ class Ros(Sim):
         Returns:
             np.ndarray: The position, as (x, y, z).
         """
-        # TODO
-        raise NotImplementedError
+        # NOTE: This is relative to the ready position. Not sure if this is correct
+        # TODO: test
+        pose_stamped = geometry_tools.find_pose_stamped_from_link(link_num=link)
+        x = pose_stamped.pose.position.x - self.ready_position[0]
+        y = pose_stamped.pose.position.y - self.ready_position[1]
+        z = pose_stamped.pose.position.z - self.ready_position[2]
+        raise (x, y, z)
 
     def get_link_orientation(self, body: str, link: int) -> np.ndarray:
         """Get the orientation of the link of the body.
@@ -153,8 +161,8 @@ class Ros(Sim):
         Returns:
             np.ndarray: The velocity, as (vx, vy, vz).
         """
-        # TODO
-        raise NotImplementedError
+        logger.log_text("Get link velocity returns 0")
+        return (0, 0, 0)
 
     def get_link_angular_velocity(self, body: str, link: int) -> np.ndarray:
         """Get the angular velocity of the link of the body.
@@ -205,7 +213,23 @@ class Ros(Sim):
             orientation (np.ndarray): The target orientation as quaternion (x, y, z, w).
         """
         # TODO: Not sure if this means move?
-        raise NotImplementedError
+        # TODO: test
+        x = position[0] + self.ready_position[0]
+        y = position[1] + self.ready_position[1]
+        z = position[2] + self.ready_position[2]
+        roll, pitch, yaw = 0, 0, 0
+        if len(orientation) == 3:
+            roll = orientation[0]
+            pitch = orientation[1]
+            yaw = orientation[2]
+        else:
+            orientation = Quaternion()
+            orientation.x = orientation[0]
+            orientation.y = orientation[1]
+            orientation.z = orientation[2]
+            orientation.w = orientation[3]
+            roll, pitch, yaw = geometry_tools.quaternion_to_rpy(orientation=orientation)
+        self.panda.go_to_pose(x, y, z, roll, pitch, yaw)
 
     def set_joint_angles(self, body: str, joints: np.ndarray, angles: np.ndarray) -> None:
         """Set the angles of the joints of the body.
@@ -216,7 +240,7 @@ class Ros(Sim):
             angles (np.ndarray): List of target angles, as a list of floats.
         """
         # TODO: Same Q
-        raise NotImplementedError
+        self.control_joints(self, body=body, joints= joints, target_angles=angles, forces=None)
 
     def set_joint_angle(self, body: str, joint: int, angle: float) -> None:
         """Set the angle of the joint of the body.
@@ -238,8 +262,11 @@ class Ros(Sim):
             target_angles (np.ndarray): List of target angles, as a list of floats.
             forces (np.ndarray): Forces to apply, as a list of floats.
         """
-        # TODO
-        raise NotImplementedError
+        # TODO: test
+        joint_goal = [None for _ in range(7)]
+        for (index, joint) in enumerate(joints):
+            joint_goal[joint] = target_angles[index]
+        self.panda.go_to_arm_joint_goal(joint_goal=joint_goal)
 
     def inverse_kinematics(self, body: str, link: int, position: np.ndarray, orientation: np.ndarray) -> np.ndarray:
         """Compute the inverse kinematics and return the new joint state.
