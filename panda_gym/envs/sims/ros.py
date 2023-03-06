@@ -11,6 +11,7 @@ class Ros(Sim):
     """Class to send robot commands to ROS.
 
     Note: Must be initialized inside of a ROS node.
+    Note: Not used means that this is not used by panda.py, core.py, or reach.py
 
     Args:
         render (bool, optional): Enable rendering. Defaults to False.
@@ -27,15 +28,17 @@ class Ros(Sim):
 
     def dt(self):
         """Timestep."""
+        # NOT USED
         raise NotImplementedError
 
     def step(self) -> None:
         """Step the simulation."""
-        raise NotImplementedError
+        # Movement is already done stepwise through other methods
+        pass
 
     def close(self) -> None:
         """Close the simulation."""
-        raise NotImplementedError
+        logger.log_text("ROS sim closed")
 
     def render(
         self,
@@ -48,7 +51,8 @@ class Ros(Sim):
         pitch: float = -30,
         roll: float = 0,
     ) -> Optional[np.ndarray]:
-        raise NotImplementedError
+        # Rendering is done through RViz
+        pass
 
     def get_base_position(self, body: str) -> np.ndarray:
         """Get the position of the body.
@@ -61,6 +65,7 @@ class Ros(Sim):
         Returns:
             np.ndarray: The position, as (x, y, z).
         """
+        # NOT USED
         raise NotImplementedError
 
     def get_base_orientation(self, body: str) -> np.ndarray:
@@ -72,6 +77,7 @@ class Ros(Sim):
         Returns:
             np.ndarray: The orientation, as quaternion (x, y, z, w).
         """
+        # NOT USED
         raise NotImplementedError
 
     def get_base_rotation(self, body: str, type: str = "euler") -> np.ndarray:
@@ -84,6 +90,7 @@ class Ros(Sim):
         Returns:
             np.ndarray: The rotation.
         """
+        # NOT USED
         raise NotImplementedError
 
     def get_base_velocity(self, body: str) -> np.ndarray:
@@ -95,6 +102,7 @@ class Ros(Sim):
         Returns:
             np.ndarray: The velocity, as (vx, vy, vz).
         """
+        # NOT USED
         raise NotImplementedError
 
     def get_base_angular_velocity(self, body: str) -> np.ndarray:
@@ -106,6 +114,7 @@ class Ros(Sim):
         Returns:
             np.ndarray: The angular velocity, as (wx, wy, wz).
         """
+        # NOT USED
         raise NotImplementedError
 
     def get_link_position(self, body: str, link: int) -> np.ndarray:
@@ -118,6 +127,7 @@ class Ros(Sim):
         Returns:
             np.ndarray: The position, as (x, y, z).
         """
+        # TODO
         raise NotImplementedError
 
     def get_link_orientation(self, body: str, link: int) -> np.ndarray:
@@ -130,6 +140,7 @@ class Ros(Sim):
         Returns:
             np.ndarray: The rotation, as (rx, ry, rz).
         """
+        # NOT USED
         raise NotImplementedError
 
     def get_link_velocity(self, body: str, link: int) -> np.ndarray:
@@ -142,6 +153,7 @@ class Ros(Sim):
         Returns:
             np.ndarray: The velocity, as (vx, vy, vz).
         """
+        # TODO
         raise NotImplementedError
 
     def get_link_angular_velocity(self, body: str, link: int) -> np.ndarray:
@@ -154,6 +166,7 @@ class Ros(Sim):
         Returns:
             np.ndarray: The angular velocity, as (wx, wy, wz).
         """
+        # NOT USED
         raise NotImplementedError
 
     def get_joint_angle(self, body: str, joint: int) -> float:
@@ -166,6 +179,7 @@ class Ros(Sim):
         Returns:
             float: The angle.
         """
+        # TODO: test
         joints = self.panda.get_arm_joint_position()
         return joints[joint]
 
@@ -190,6 +204,7 @@ class Ros(Sim):
             position (np.ndarray): The position, as (x, y, z).
             orientation (np.ndarray): The target orientation as quaternion (x, y, z, w).
         """
+        # TODO: Not sure if this means move?
         raise NotImplementedError
 
     def set_joint_angles(self, body: str, joints: np.ndarray, angles: np.ndarray) -> None:
@@ -200,6 +215,7 @@ class Ros(Sim):
             joints (np.ndarray): List of joint indices, as a list of ints.
             angles (np.ndarray): List of target angles, as a list of floats.
         """
+        # TODO: Same Q
         raise NotImplementedError
 
     def set_joint_angle(self, body: str, joint: int, angle: float) -> None:
@@ -210,6 +226,7 @@ class Ros(Sim):
             joint (int): Joint index in the body.
             angle (float): Target angle.
         """
+        # NOT USED
         raise NotImplementedError
 
     def control_joints(self, body: str, joints: np.ndarray, target_angles: np.ndarray, forces: np.ndarray) -> None:
@@ -221,6 +238,7 @@ class Ros(Sim):
             target_angles (np.ndarray): List of target angles, as a list of floats.
             forces (np.ndarray): Forces to apply, as a list of floats.
         """
+        # TODO
         raise NotImplementedError
 
     def inverse_kinematics(self, body: str, link: int, position: np.ndarray, orientation: np.ndarray) -> np.ndarray:
@@ -235,6 +253,9 @@ class Ros(Sim):
         Returns:
             np.ndarray: The new joint state.
         """
+        # TODO: ig we have to plan movement and then query the goal position
+        # alternatively just implement the basic jacobian inverse ik
+        # hopefully this is not called because we are using joints instead of ee
         raise NotImplementedError
 
     def place_visualizer(self, target_position: np.ndarray, distance: float, yaw: float, pitch: float) -> None:
@@ -246,12 +267,12 @@ class Ros(Sim):
             yaw (float): Yaw.
             pitch (float): Pitch.
         """
-        raise NotImplementedError
+        logger.log_text("Placing visualizer does nothing")
 
     @contextmanager
     def no_rendering(self) -> Iterator[None]:
         """Disable rendering within this context."""
-        raise NotImplementedError
+        logger.log_text("Disabling rendering does nothing")
 
     def loadURDF(self, body_name: str, **kwargs: Any) -> None:
         """Load URDF file.
@@ -259,7 +280,7 @@ class Ros(Sim):
         Args:
             body_name (str): The name of the body. Must be unique in the sim.
         """
-        raise NotImplementedError
+        logger.log_text("Loading URDF does nothing")
 
     def create_box(
         self,
@@ -290,6 +311,7 @@ class Ros(Sim):
                 value. Defaults to None.
             texture (str or None, optional): Texture file name. Defaults to None.
         """
+        # NOT USED
         raise NotImplementedError
 
     def create_cylinder(
@@ -321,6 +343,7 @@ class Ros(Sim):
             spinning_friction (float or None, optional): Spinning friction. If None, use the default pybullet
                 value. Defaults to None.
         """
+        # NOT USED
         raise NotImplementedError
 
     def create_sphere(
@@ -350,7 +373,7 @@ class Ros(Sim):
             spinning_friction (float or None, optional): Spinning friction. If None, use the default pybullet
                 value. Defaults to None.
         """
-        raise NotImplementedError
+        logger.log_text("Create sphere does nothing")
 
     def _create_geometry(
         self,
@@ -379,7 +402,7 @@ class Ros(Sim):
             visual_kwargs (dict, optional): Visual kwargs. Defaults to {}.
             collision_kwargs (dict, optional): Collision kwargs. Defaults to {}.
         """
-        raise NotImplementedError
+        logger.log_text("Create geometry does nothing")
 
     def create_plane(self, z_offset: float) -> None:
         """Create a plane. (Actually, it is a thin box.)
@@ -387,7 +410,7 @@ class Ros(Sim):
         Args:
             z_offset (float): Offset of the plane.
         """
-        raise NotImplementedError
+        logger.log_text("Create plane does nothing")
 
     def create_table(
         self,
@@ -410,7 +433,7 @@ class Ros(Sim):
             spinning_friction (float or None, optional): Spinning friction. If None, use the default pybullet
                 value. Defaults to None.
         """
-        raise NotImplementedError
+        logger.log_text("Create table does nothing")
 
     def set_lateral_friction(self, body: str, link: int, lateral_friction: float) -> None:
         """Set the lateral friction of a link.
@@ -420,7 +443,7 @@ class Ros(Sim):
             link (int): Link index in the body.
             lateral_friction (float): Lateral friction.
         """
-        raise NotImplementedError
+        logger.log_text("Set lateral friction does nothing")
 
     def set_spinning_friction(self, body: str, link: int, spinning_friction: float) -> None:
         """Set the spinning friction of a link.
@@ -430,4 +453,4 @@ class Ros(Sim):
             link (int): Link index in the body.
             spinning_friction (float): Spinning friction.
         """
-        raise NotImplementedError
+        logger.log_text("Set spinning friction does nothing")
