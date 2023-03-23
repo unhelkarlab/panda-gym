@@ -476,9 +476,10 @@ class PyBulletRobot(ABC):
     ) -> None:
         self.sim = sim
         self.body_name = body_name
-        with self.sim.no_rendering():
-            self._load_robot(file_name, base_position)
-            self.setup()
+        if self.sim.type != "ros": # This is some god awful coding. i know
+            with self.sim.no_rendering():
+                self._load_robot(file_name, base_position)
+                self.setup()
         self.action_space = action_space
         self.joint_indices = joint_indices
         self.joint_forces = joint_forces
@@ -701,7 +702,11 @@ class RobotTaskEnv(gym.GoalEnv):
         }
 
     def reset(self) -> Dict[str, np.ndarray]:
-        with self.sim.no_rendering():
+        if self.sim.type != "ros":
+            with self.sim.no_rendering():
+                self.robot.reset()
+                self.task.reset()
+        else:
             self.robot.reset()
             self.task.reset()
         return self._get_obs()

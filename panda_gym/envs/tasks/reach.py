@@ -21,9 +21,10 @@ class Reach(Task):
         self.get_ee_position = get_ee_position
         self.goal_range_low = np.array([-goal_range / 2, -goal_range / 2, 0])
         self.goal_range_high = np.array([goal_range / 2, goal_range / 2, goal_range])
-        with self.sim.no_rendering():
-            self._create_scene()
-            self.sim.place_visualizer(target_position=np.zeros(3), distance=0.9, yaw=45, pitch=-30)
+        if self.sim.type != "ros":
+            with self.sim.no_rendering():
+                self._create_scene()
+                self.sim.place_visualizer(target_position=np.zeros(3), distance=0.9, yaw=45, pitch=-30)
 
     def _create_scene(self) -> None:
         self.sim.create_plane(z_offset=-0.4)
