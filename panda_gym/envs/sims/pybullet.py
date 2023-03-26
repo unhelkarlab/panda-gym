@@ -44,6 +44,7 @@ class PyBullet(Sim):
         self.physics_client.setAdditionalSearchPath(pybullet_data.getDataPath())
         self.physics_client.setGravity(0, 0, -9.81)
         self._bodies_idx = {}
+        self.type = "pybullet"
 
     @property
     def dt(self):

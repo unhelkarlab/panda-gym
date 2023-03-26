@@ -30,6 +30,8 @@ class Ros(Sim):
         self.ready_joints = [0, -0.785, 0, -2.356, 0, 1.571, 0.785]
         self.ready_position = [0.30702, 0, 0.59028]
         self.ready_orientation = [0.92394, -0.38254, 0, 0]
+        self.upper_joint_limits = [2.86, 1.73, 2.86, -0.1, 2.86, 3.72, 2.86, 0, 0, 0.035, 0.035]
+        self.lower_joint_limits = [-2.86, -1.73, -2.86, -3.04, -2.86, 0.02, -2.86, 0, 0, -0.035, -0.035]
         self.type = "ros"
 
     def dt(self):
@@ -197,6 +199,7 @@ class Ros(Sim):
         Returns:
             float: The angle.
         """
+        # TODO: add info for joints 9 and 10 (fingers)
         joints = self.panda.get_arm_joint_position()
         return joints[joint]
 
@@ -233,10 +236,10 @@ class Ros(Sim):
             yaw = orientation[2]
         else:
             orientation1 = Quaternion()
-            orientation1.x = orientation[0]
-            orientation1.y = orientation[1]
-            orientation1.z = orientation[2]
-            orientation1.w = orientation[3]
+            orientation1.x = orientation[3]
+            orientation1.y = orientation[2]
+            orientation1.z = orientation[1]
+            orientation1.w = orientation[0]
             roll, pitch, yaw = geometry_tools.quaternion_to_rpy(
                 orientation=orientation1)
         self.panda.go_to_pose(x, y, z, roll, pitch, yaw)
@@ -281,10 +284,16 @@ class Ros(Sim):
         joint_goal = [None for _ in range(7)]
         hand_joint_goal = [None for _ in range(2)]
         for (index, joint) in enumerate(joints):
+            joint_angle = target_angles[index]
+            if joint_angle > self.upper_joint_limits[joint]:
+                joint_angle = self.upper_joint_limits[joint]
+            elif joint_angle < self.lower_joint_limits[joint]:
+                joint_angle = self.lower_joint_limits[joint]
+
             if (joint < 7):
-                joint_goal[joint] = target_angles[index]
+                joint_goal[joint] = joint_angle
             if (joint > 8 and joint < 11):
-                hand_joint_goal[joint - 9] = target_angles[index]
+                hand_joint_goal[joint - 9] = joint_angle
         self.panda.go_to_arm_joint_goal(joint_goal=joint_goal, override_confirm=True)
         self.panda.go_to_hand_joint_goal(joint_goal=hand_joint_goal)
 
