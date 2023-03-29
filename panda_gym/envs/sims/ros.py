@@ -28,7 +28,7 @@ class Ros(Sim):
         self.panda = MoveGroupInterface(execution_speed=execution_speed,
                                         sim=sim)
         self.ready_joints = [0, -0.785, 0, -2.356, 0, 1.571, 0.785]
-        self.ready_position = [0.30702, 0, 0.59028]
+        self.ready_position = [0.923, 0, 0.302] # [0.30702, 0, 0.59028]
         self.ready_orientation = [0.92394, -0.38254, 0, 0]
         self.upper_joint_limits = [2.86, 1.73, 2.86, -0.1, 2.86, 3.72, 2.86, 0, 0, 0.035, 0.035]
         self.lower_joint_limits = [-2.86, -1.73, -2.86, -3.04, -2.86, 0.02, -2.86, 0, 0, -0.035, -0.035]
@@ -148,7 +148,7 @@ class Ros(Sim):
 
         pose = self.panda.get_pose()
 
-        return (pose.position.x, pose.position.y, pose.position.z)
+        return (pose.position.x - self.ready_position[0], pose.position.y - self.ready_position[1], pose.position.z - self.ready_position[2])
 
     def get_link_orientation(self, body: str, link: int) -> np.ndarray:
         """Get the orientation of the link of the body.
@@ -173,7 +173,10 @@ class Ros(Sim):
         Returns:
             np.ndarray: The velocity, as (vx, vy, vz).
         """
-        logger.log_text("Get link velocity returns 0")
+        if link != 11:
+            raise NotImplementedError
+        
+        # Link velocity is always 0 after movement
         return (0, 0, 0)
 
     def get_link_angular_velocity(self, body: str, link: int) -> np.ndarray:
@@ -226,9 +229,9 @@ class Ros(Sim):
             orientation (np.ndarray): The target orientation as quaternion (x, y, z, w).
         """
         # TODO: Not sure if this means move?
-        x = position[0] + self.ready_position[0]
-        y = position[1] + self.ready_position[1]
-        z = position[2] + self.ready_position[2]
+        x = position[0]# + self.ready_position[0]
+        y = position[1]# + self.ready_position[1]
+        z = position[2]# + self.ready_position[2]
         roll, pitch, yaw = 0, 0, 0
         if len(orientation) == 3:
             roll = orientation[0]
@@ -242,7 +245,10 @@ class Ros(Sim):
             orientation1.w = orientation[0]
             roll, pitch, yaw = geometry_tools.quaternion_to_rpy(
                 orientation=orientation1)
-        self.panda.go_to_pose(x, y, z, roll, pitch, yaw)
+        
+        # NOTE: This function is not working as expected and so I am disabling it lmao
+        print("reset occured")
+        # self.panda.go_to_pose(x, y, z, roll, pitch, yaw)
 
     def set_joint_angles(self, body: str, joints: np.ndarray,
                          angles: np.ndarray) -> None:
